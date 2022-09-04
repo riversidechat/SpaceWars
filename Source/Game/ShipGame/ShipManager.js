@@ -34,7 +34,7 @@ class ShipManager {
             let kill = this.enemies[i].update(delta_time, this, bullet_manager, asteroid_manager, this.bounds);
 
             if(!kill) continue;
-            this.killed_players.push(this.enemies.splice(i, 1)[0]);
+            this.killed_enemies.push(this.enemies.splice(i, 1)[0]);
 
             if(this.enemies.length == 0) {
                 this.next_generation();

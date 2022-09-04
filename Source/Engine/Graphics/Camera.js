@@ -21,7 +21,7 @@ class camera {
         this.shake_position.add(vec2.multiply(this.shake_velocity, deltaTime));
     }
     shake(v) {
-        this.shake_velocity = v.clone();
+        this.shake_velocity.add(v);;
     }
     move_softly(pos, bounds) {
         this.real_position.add(vec2.divide(vec2.subtract(pos, this.real_position), 8));

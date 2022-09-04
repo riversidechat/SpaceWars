@@ -8,7 +8,7 @@ let mode = "intro"
 let intro_timer = 0;
 let intro_end_time = 1;
 let updates = 1;
-const game_zoom = 4;
+const game_zoom = 2.5;
 
 function setup() {
     mainCanvas = renderer.createCanvas(new rect(0, 0, renderer.screenWidth(), renderer.screenHeight()));
@@ -91,8 +91,6 @@ async function render(delta_time) {
         bullet_manager.draw();
         ship_manager.draw();
         asteroid_manager.draw();
-        // powerUp_manager.draw();
-        // powerUp_manager.qtree.draw();
     } else if(mode === "intro") {
         drawIntroText(color.white, 1, ship_manager);
     } 

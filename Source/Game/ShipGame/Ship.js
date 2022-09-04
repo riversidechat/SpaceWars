@@ -30,8 +30,9 @@ class Ship extends ShipStats {
         this.rotation_damping = 0.9;
 
         this.base_bullet_velocity = 75;
-        this.gun_accuracy = math.map(100, 0, 100, Math.PI, 0); // range between 0% and 100%
+        this.gun_accuracy = math.map(99, 0, 100, Math.PI, 0); // range between 0% and 100%
         this.gun_delay = 0.2; // deley in seconds
+        this.boost_delay = 0.0; // deley in seconds
         this.gun_timer = this.gun_delay;
         this.target_ship = undefined;
 
@@ -43,28 +44,48 @@ class Ship extends ShipStats {
                                                                 vec2.create(-this.ship_size * (2/3), -this.ship_size * (3 / 4))]);
         this.qtree_item = undefined;
     }
+    draw_health_bar() {
+        const health_bar_length = 100;
+        const padding = 25;
+
+        renderer.strokeWeight = 20;
+        renderer.strokeColor = color.create(50, 50, 50);
+
+        let pos = vec2.create(Math.cos(this.rotation) * -(this.ship_size * (3 / 4) + health_bar_length / 2 + padding), Math.sin(this.rotation) * -(this.ship_size * (2/3) + padding)).add(this.position);
+        let a = vec2.add(pos, vec2.create(-health_bar_length / 2, 0));
+        let b = vec2.add(pos, vec2.create(health_bar_length / 2, 0)); 
+        let c = vec2.add(pos, vec2.create((this.health / 100) * health_bar_length - (health_bar_length / 2), 0));
+        renderer.line(a, b);
+        renderer.strokeWeight = 10;
+        renderer.strokeColor = color.create(100, 0, 0);
+        renderer.line(a, b);
+        renderer.strokeColor = color.create(0, 255, 0);
+        renderer.line(a, c);
+    }
     draw() {
         renderer.strokeColor = color.white;
         renderer.strokeWeight = 5;
         this.shape.draw();
+        this.draw_health_bar();
     }
     can_fire() {
-        return this.gun_timer >= this.gun_delay;
+        return this.gun_timer >= this.gun_delay + this.boost_delay;
     }
-    fire(bullet_manager, target_id = -1, delta_rotation = 0) {
+    fire(bullet_manager, target_id = -1) {
         let pos = vec2.create(Math.cos(this.rotation + this.rotation_velocity) * this.ship_size * (6/5), Math.sin(this.rotation + this.rotation_velocity) * this.ship_size * (6/5)).add(this.velocity);
-        let bullet_rotation = this.rotation + delta_rotation + math.random(-this.gun_accuracy, this.gun_accuracy) + this.rotation_velocity;
+        let bullet_rotation = this.rotation + math.random(-this.gun_accuracy, this.gun_accuracy) + this.rotation_velocity;
         let bullet_velocity = vec2.create(Math.cos(bullet_rotation) * this.base_bullet_velocity, Math.sin(bullet_rotation) * this.base_bullet_velocity).add(this.velocity);
         bullet_manager.add(new Bullet(vec2.add(this.position, pos),
                                       bullet_velocity, 
+                                      bullet_rotation,
                                       25,
                                       this,
                                       target_id,
                                       math.random(0.8, 1)));
         this.gun_timer = 0;
 
-        const recoilPower_pos = 0;
-        const recoilPower_vel = 0;
+        const recoilPower_pos = 1;
+        const recoilPower_vel = 0.5;
         let recoil = vec2.create(Math.cos(this.rotation), Math.sin(this.rotation));
         this.position.add(vec2.multiply(recoil, -recoilPower_pos))
         this.velocity.add(vec2.multiply(recoil, -recoilPower_vel))
@@ -106,8 +127,6 @@ class Ship extends ShipStats {
             if(b.owner.id == this.id)
                 continue;
 
-            this.health -= b.damage;
-
             b.hit(this);
             b.kill();
         }
@@ -120,6 +139,9 @@ class Ship extends ShipStats {
             if(!SAT_static(s.shape, this.shape))
                 continue;
         }
+    }
+    hit(bullet) {
+        this.health -= bullet.damage;
     }
 }
 
@@ -147,11 +169,14 @@ class Player extends Ship {
         let down = keyboard.getKey(keyboard.keys.down_arrow).down || keyboard.getKey(keyboard.keys.s).down;
         let left = keyboard.getKey(keyboard.keys.left_arrow).down || keyboard.getKey(keyboard.keys.a).down;
         let right = keyboard.getKey(keyboard.keys.right_arrow).down || keyboard.getKey(keyboard.keys.d).down;
-        this.acceleration = (up - down) / 2.5 * deltaTime;
+        let boost = 3 - (keyboard.getKey(keyboard.keys.shift_left).down * 1.5);
+        this.acceleration = (up - down) / boost * deltaTime;
         this.rotation_acceleration = (left - right) / 150 * deltaTime;
         
+        this.boost_delay = keyboard.getKey(keyboard.keys.shift_left).down / 10;
+
         if(mouse.down && this.can_fire()) {
-            this.fire(bullet_manager, -1, 0);
+            this.fire(bullet_manager, -1);
         }
         
         if(keyboard.getKey(keyboard.keys.space).down) {
@@ -200,15 +225,16 @@ class Player extends Ship {
 
         if(index == -1) return;
 
-        const max_shake = 100;
+        const max_shake = 50;
         let bullet = bullets[index];
         renderer.camera.shake(vec2.subtract(bullet.position, this.position).normalize().multiply(-max_shake * (1 / (min_distance / 10))));
     }
     draw(ship_manager) {
-        const arrow_dist = 100;
+        const arrow_dist = 200;
         const arrow_size = 25;
         super.draw();
 
+        renderer.strokeWeight = 5;
         renderer.strokeColor = color.red;
         let ships = this.find_ships_near_me(ship_manager);
         for(let ship of ships) {
@@ -223,6 +249,11 @@ class Player extends Ship {
                 poly.draw();
         }
     }
+    hit(bullet) {
+        super.hit(bullet);
+        const max_shake_power = 250;
+        renderer.camera.shake(vec2.subtract(bullet.position, this.position).normalize().multiply(-(bullet.damage / 100 * max_shake_power)));
+    }
 }
 
 class Enemy extends Ship {
@@ -230,7 +261,7 @@ class Enemy extends Ship {
         super(a, b, c, d);
 
         if(nn != undefined) this.nn = new NeuralNetwork(nn);
-        else this.nn = new NeuralNetwork([7, 14, 28, 14, 3]);
+        else this.nn = new NeuralNetwork([7, 14, 28, 14, 4]);
         this.target_position;
     }
     find_closest_ship(ship_manager) {
@@ -348,10 +379,12 @@ class Enemy extends Ship {
         inputs[6] = (this.health - 50) / 50
         let outputs = this.nn.feedForward(inputs);
 
-        this.acceleration = outputs[0] / 2.5 * deltaTime;
-        this.rotation_acceleration = outputs[1] / 150 * deltaTime;
+        this.acceleration = outputs[0] / (3 - ((outputs[1] + 1) / 2) * 1.5) * deltaTime;
+        this.rotation_acceleration = outputs[2] / 150 * deltaTime;
+
+        this.boost_delay = (Math.round((outputs[1] + 1)) / 2) / 10;
         
-        if(outputs[2] >= 0 && this.can_fire()) {
+        if(outputs[3] >= 0 && this.can_fire()) {
             this.fire(bullet_manager);
         }
     }

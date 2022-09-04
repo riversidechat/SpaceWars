@@ -1,8 +1,8 @@
 class Bullet {
-    constructor(position, velocity, damage, owner, target_id, end_time = 2) {
+    constructor(position, velocity, rotation, damage, owner, target_id, end_time = 2) {
         this.position = (position != undefined ? position.clone() : vec2.zero);
         this.velocity = (velocity != undefined ? velocity.clone() : vec2.zero);
-
+        this.rotation = rotation;
         this.velocity_damping = 0.99
 
 
@@ -17,12 +17,12 @@ class Bullet {
         let c = color.create(0, 180, 255);
         renderer.strokeColor = c;
         renderer.strokeWeight = 5;
-        renderer.line(this.position, vec2.add(this.position, vec2.normalize(this.velocity).multiply(this.size)))
+        renderer.line(this.position, vec2.create(Math.cos(this.rotation) * this.size, Math.sin(this.rotation) * this.size).add(this.position))
 
         c.a = 0.2;
         renderer.strokeColor = c;
         renderer.strokeWeight = 35;
-        renderer.line(this.position, vec2.add(this.position, vec2.normalize(this.velocity).multiply(this.size)))
+        renderer.line(this.position, vec2.create(Math.cos(this.rotation) * this.size, Math.sin(this.rotation) * this.size).add(this.position))
     }
     update(delta_time, bounds) {
         let deltaTime = 60 * delta_time;
@@ -39,6 +39,7 @@ class Bullet {
     hit(obj) {
         this.owner.rounds_hit++;
         if(obj instanceof Ship) {
+            obj.hit(this);
             if(obj.id == this.target_id && obj.health <= 0) this.owner.bonus++
 
             if(obj.health <= 0)
@@ -50,10 +51,10 @@ class Bullet {
         this.velocity = vec2.zero;
     }
     get shape() {
-        return new line(this.position, vec2.add(this.position, this.velocity.clone().normalize().multiply(this.size)))
+        return new line(this.position, vec2.create(Math.cos(this.rotation) * this.size, Math.sin(this.rotation) * this.size).add(this.position))
     }
     get area() {
-        let size = this.velocity.clone().normalize().multiply(this.size);
+        let size = vec2.create(Math.cos(this.rotation) * this.size, Math.sin(this.rotation) * this.size);
         let x1 = Math.min(this.position.x, this.position.x + size.x)
         let y1 = Math.min(this.position.y, this.position.y + size.y)
         let x2 = Math.max(this.position.x, this.position.x + size.x)
