@@ -80,7 +80,7 @@ async function update(delta_time) {
         renderer.camera.position = vec2.add(renderer.camera.real_position, renderer.camera.shake_position);
         renderer.zoom = math.lerp_tweenIn(1, game_zoom, (intro_timer / intro_end_time))
 
-        if(intro_timer >= intro_end_time) mode = "game"
+        if(intro_timer >= intro_end_time) mode = "game";
     }
 }
 
