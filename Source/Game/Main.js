@@ -8,14 +8,14 @@ let mode = "intro"
 let intro_timer = 0;
 let intro_end_time = 1;
 let updates = 1;
-const game_zoom = 2.5;
+const game_zoom = 4;
 
 function setup() {
     mainCanvas = renderer.createCanvas(new rect(0, 0, renderer.screenWidth(), renderer.screenHeight()));
     renderer.zoom = 1;
     
     ship_manager.add(new Player(vec2.zero, vec2.zero, Math.PI / 2));
-    for(let i = 0; i < 50; ++i) {
+    for(let i = 0; i < 1; ++i) {
         let ship = new Enemy(undefined, vec2.random(bounds.left, bounds.right, bounds.top, bounds.bottom), vec2.zero, Math.PI / 2);
 
         let found = [];
@@ -117,17 +117,17 @@ function drawIntroText(c, draw_ship = 1, ship_manager) {
     let ship_size = ship_manager.players[0].ship_size;
     position.x += ship_size * 3/4;
     
+    let pos = vec2.add(position, 0, ship_size * 2/3);
     if(draw_ship) {
-        let pos = vec2.add(position, 0, ship_size * 2/3);
         let shape = new Polygon(pos, Math.PI / 2, [vec2.create(ship_size, 0),
             vec2.create(-ship_size * 2/3, ship_size * 3/4),
             vec2.create(-ship_size * 2/3, -ship_size * 3/4)]);
             shape.draw();
-            
-            ship_manager.players[0].position = pos.clone();
-            ship_manager.players[0].shape.position = ship_manager.players[0].position;
-            ship_manager.players[0].shape.update();
-    }
+    }        
+    ship_manager.players[0].position = pos.clone();
+    ship_manager.players[0].shape.position = ship_manager.players[0].position;
+    ship_manager.players[0].shape.update();
+
     position.x += ship_size * 3/4 + padding_x;
 
     drawString('CE ', false, start_position, position, width, height, padding_x, padding_y);
@@ -135,19 +135,18 @@ function drawIntroText(c, draw_ship = 1, ship_manager) {
     ship_size = ship_manager.enemies[0].ship_size;
     position.x += ship_size * 3/4;
     
+    pos = vec2.add(position, 0, ship_size * 2/3);
     if(draw_ship) {
-        let pos = vec2.add(position, 0, ship_size * 2/3);
         let shape = new Polygon(pos, Math.PI / 2, [vec2.create(ship_size, 0),
             vec2.create(-ship_size * 2/3, ship_size * 3/4),
             vec2.create(-ship_size * 2/3, -ship_size * 3/4)]);
             shape.draw();
-            
-            ship_manager.enemies[0].position = pos.clone();
-            ship_manager.enemies[0].shape.position = ship_manager.enemies[0].position;
-            ship_manager.enemies[0].shape.update();
-
-            ship_manager.update_qtree();
     }
+    ship_manager.enemies[0].position = pos.clone();
+    ship_manager.enemies[0].shape.position = ship_manager.enemies[0].position;
+    ship_manager.enemies[0].shape.update();
+    ship_manager.update_qtree();
+    
     position.x += ship_size * 3/4 + padding_x;
     drawString('RS', false, start_position, position, width, height, padding_x, padding_y);
 

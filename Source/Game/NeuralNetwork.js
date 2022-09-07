@@ -5,6 +5,7 @@ function sigmoid(x) {
         return (1 / (1 + Math.exp(-x)));
     }
 }
+sigmoid.string = "sigmoid";
 function sigmoid_prime(x) {
     if(x instanceof matrix) {
         return matrix.map(x, (value) => { return sigmoid(value) * (1 - sigmoid(value)); })
@@ -19,6 +20,7 @@ function tanh(x) {
         return Math.tanh(x);
     }
 }
+tanh.string = "tanh";
 function tanh_prime(x) {
     if(x instanceof matrix) {
         return matrix.map(x, (value) => { return 1 - Math.pow(Math.tanh(x), 2); })
@@ -64,6 +66,16 @@ class NeuralNetwork {
                 this.biases[i] = new matrix(rows, 1);
                 this.biases[i].forEach(() => { return 1; });
             }
+        } else {
+            this.topology = [];
+
+            this.activation = sigmoid;
+            this.derivitive = sigmoid_prime;
+
+            this.old_inputs = [];
+
+            this.biases = [];
+            this.weights = [];
         }
     }
     train(inputs, targets) {
@@ -196,5 +208,86 @@ class NeuralNetwork {
         let link = html.CreateElement("a", {"id": "save", "download": "nn.save", "href": "data:application/octet-stream," + text}, "body");
         let obj = document.querySelector(link);
         obj.click();
+    }
+    toString(decimals = 0) {
+        let string = "";
+        let region = "";
+        let newRegion = (name) => { string += ":" + name + ":"; region = name; };
+        let pushValue = (value) => { string += value + "|"}
+        
+        newRegion("topology");
+        for(let size of this.topology) {
+            pushValue(size);
+        }
+
+        newRegion("activation");
+        pushValue(this.activation.string);
+
+        newRegion("weights");
+        for(let weight of this.weights) {
+            newRegion("matrix");
+            for(let arr of weight.data) {
+                newRegion("array");
+                for(let value of arr) {
+                    if(decimals <= 0)
+                        pushValue(value);
+                    else
+                        pushValue(math.round(value, 10 ** decimals));
+                }
+            }
+        }
+
+        newRegion("biases");
+        for(let bias of this.biases) {
+            newRegion("matrix");
+            for(let value of bias.data) {
+                if(decimals <= 0)
+                    pushValue(value);
+                else
+                    pushValue(math.round(value, 10 ** decimals));
+                
+            }
+        }
+        
+        return string;
+    }
+    fromString(string) {
+        let index = 0;
+        let getRegion = () => {
+            let region = "";
+            index++;
+            while(string[index] != ':') {
+                region += string[index];
+                index++;
+            }
+            return region;
+        }
+        let getValue = () => {
+            let value = "";
+            index++;
+            while(string[index] != '|') {
+                value += string[index];
+                index++;
+            }
+            return parseFloat(value);
+        }
+        let getValues = () => {
+            let values = [];
+            while(string[index + 1] != ':') {
+                values.push(getValue());
+            }
+            index++;
+            return values;
+        }
+
+        let region = getRegion();
+        let value = getValues();
+        let region2 = getRegion();
+        return [value, region, region2]
+        // switch(region) {
+        //     case "topology": {
+
+        //     } break;
+        // }
     }
 }

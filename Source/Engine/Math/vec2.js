@@ -153,6 +153,9 @@ class vec2 {
     this.y = f(this.y, v.y, ty || tx);
     return this;
   }
+  rotation() {
+    return Math.atan2(this.y, this.x);
+  }
 
   static magnitude(a) {
     let r = new vec2(a);
@@ -188,6 +191,10 @@ class vec2 {
   static lerpf(f, a, b, tx, ty) {
     let r = new vec2(a);
     return r.lerpf(f, b, tx, ty);
+  }
+  static rotation(a) {
+    let r = new vec2(a);
+    return r.rotation();
   }
 
   distance(a) {

@@ -54,4 +54,7 @@ class math {
   static wrapMinMax(x, min, max) {
     return min + math.wrapMax(x - min, max - min);
   }
+  static round(value, precision) {
+    return (Math.round(value * precision) / precision)
+  }
 }
