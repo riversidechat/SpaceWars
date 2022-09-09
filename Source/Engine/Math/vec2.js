@@ -156,6 +156,22 @@ class vec2 {
   rotation() {
     return Math.atan2(this.y, this.x);
   }
+  min(x, y) {
+    this.x = Math.min(this.x, x);
+    this.y = Math.min(this.y, y || x);
+    return this;
+  }
+  max(x, y) {
+    this.x = Math.max(this.x, x);
+    this.y = Math.max(this.y, y || x);
+    return this;
+  }
+  clamp(min_x, max_x, min_y, max_y) {
+    this.max(min_x, min_y || min_x);
+    this.min(max_x, max_y || max_x);
+
+    return this;
+  }
 
   static magnitude(a) {
     let r = new vec2(a);
@@ -195,6 +211,18 @@ class vec2 {
   static rotation(a) {
     let r = new vec2(a);
     return r.rotation();
+  }
+  static min(a, x, y) {
+    let r = new vec2(a);
+    return r.min(x, y);
+  }
+  static max(a, x, y) {
+    let r = new vec2(a);
+    return r.max(x, y);
+  }
+  static clamp(a, min_x, max_x, min_y, max_y) {
+    let r = new vec2(a);
+    return r.clamp(min_x, max_x, min_y, max_y);
   }
 
   distance(a) {

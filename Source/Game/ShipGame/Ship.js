@@ -46,18 +46,21 @@ class Ship extends ShipStats {
     }
     draw_health_bar() {
         const health_bar_length = 100;
-        const padding = 25;
+        const padding = 35;
 
-        renderer.strokeWeight = 20;
-        renderer.strokeColor = color.create(50, 50, 50);
+        renderer.strokeWeight = 30;
+        renderer.strokeColor = color.create(255, 255, 255);
 
         let pos = vec2.create(Math.cos(this.rotation) * -(this.ship_size * (3 / 4) + health_bar_length / 2 + padding), Math.sin(this.rotation) * -(this.ship_size * (2/3) + padding)).add(this.position);
         let a = vec2.add(pos, vec2.create(-health_bar_length / 2, 0));
         let b = vec2.add(pos, vec2.create(health_bar_length / 2, 0)); 
         let c = vec2.add(pos, vec2.create((this.health / 100) * health_bar_length - (health_bar_length / 2), 0));
         renderer.line(a, b);
+        renderer.strokeWeight = 20;
+        renderer.strokeColor = color.create(0, 0, 0);
+        renderer.line(a, b);
         renderer.strokeWeight = 10;
-        renderer.strokeColor = color.create(100, 0, 0);
+        renderer.strokeColor = color.create(255, 0, 0);
         renderer.line(a, b);
         renderer.strokeColor = color.create(0, 255, 0);
         renderer.line(a, c);
@@ -154,6 +157,7 @@ class Player extends Ship {
         this.aim_assist_percentage = 100;
         this.aim_assist_timer = 0;
         this.aim_assist_max_timer = 0.5;
+        this.old_interception = vec2.zero;
     }
     find_ships_near_me(ship_manager) {
         const size = 15000;
@@ -167,30 +171,47 @@ class Player extends Ship {
         
         return bullet_manager.qtree.search(area);
     }
-    aim_assist(delta_time) {
+    aim_assist(asteroid_manager) {
         const max_distance = 15000;
         const max_angle = Math.PI / 8;
         const size = 10000;
 
-        let area = new rect(this.position.x - (size / 2), this.position.y - (size / 2), size, size);
-        
         let target = undefined;
-
+        let area = new rect(this.position.x - (size / 2), this.position.y - (size / 2), size, size);
         let ships = ship_manager.qtree.search(area);
 
-        if(ships.length == 1) return;
+        let line_of_sight = (position, s2) => {
+            let has_line_of_sight = 1;
+            for(let p of s2.shape.translated) {
+                let l = new line(position, p);
+
+                let asteroids = asteroid_manager.qtree.search(l.area);
+                for(let asteroid of asteroids) {
+                    has_line_of_sight &= !poly_line_collision(asteroid.shape, l);
+                }
+            }
+            
+            return has_line_of_sight;
+        }
+
+        if(ships.length == 1) {
+            this.target_ship = undefined;
+            return;
+        }
 
         let min_angle = Infinity;
         for(let ship of ships) {
             if(ship.id == this.id) continue;
 
+            
             let target_position = vec2.subtract(ship.position, this.position).normalize().add(this.position);
             let real_position = vec2.add(vec2.create(Math.cos(this.rotation), Math.sin(this.rotation)), this.position);
             let c = target_position.distance(real_position);
             let angle = Math.acos(((c ** 2) - 2) / -2);
-
+            
             if(ship.position.distance(this.position) < max_distance && angle < max_angle) {
                 if(angle < min_angle) {
+                    if(!line_of_sight(this.shape.translated[0], ship)) continue;
                     min_angle = angle;
                     target = ship;
                 }
@@ -199,7 +220,7 @@ class Player extends Ship {
 
         if(target == undefined) {
             this.target_ship = undefined;
-        } else if(this.target_ship == undefined) {
+        } else {
             this.target_ship = target;
         }
     }
@@ -217,7 +238,7 @@ class Player extends Ship {
 
         if(mouse.down) {
             if(this.target_ship != undefined)
-                this.aim_assist_timer += delta_time;
+                this.aim_assist_timer = Math.min(this.aim_assist_max_timer, this.aim_assist_timer + delta_time);
             else
                 this.aim_assist_timer = Math.max(0, this.aim_assist_timer - delta_time);
 
@@ -235,12 +256,12 @@ class Player extends Ship {
             this.rotation = Math.atan2(current_angle.y, current_angle.x);
         }
     }
-    update(delta_time, ship_manager, bullet_manager, bounds) {
+    update(delta_time, ship_manager, bullet_manager, asteroid_manager, bounds) {
         let deltaTime = 60 * delta_time;
         this.gun_timer += delta_time;
         if(this.health <= 0) return true;
         
-        this.aim_assist(delta_time);
+        this.aim_assist(asteroid_manager);
         this.enemy_bullet_shake(bullet_manager);
         this.handle_user_input(delta_time, bullet_manager);
 
@@ -308,9 +329,15 @@ class Player extends Ship {
         let bullet_velocity = 0;
         
         if(this.target_ship != undefined) {
-            let interception = intercept(this, this.base_bullet_velocity, this.target_ship);
-            
+            let interception = intercept(this, this.base_bullet_velocity, this.target_ship, 25);
+            this.old_interception = interception.clone();
             let desired_angle = vec2.subtract(interception, this.position).normalize();
+            let current_angle = vec2.create(Math.cos(bullet_rotation), Math.sin(bullet_rotation));
+            let t = math.lerp(0, (this.aim_assist_percentage / 100), (math.clamp(this.aim_assist_timer, 0, this.aim_assist_max_timer) / this.aim_assist_max_timer));
+            current_angle.add(vec2.multiply(vec2.subtract(desired_angle, current_angle), t));
+            bullet_rotation = Math.atan2(current_angle.y, current_angle.x);
+        } else {
+            let desired_angle = vec2.subtract(this.old_interception, this.position).normalize();
             let current_angle = vec2.create(Math.cos(bullet_rotation), Math.sin(bullet_rotation));
             let t = math.lerp(0, (this.aim_assist_percentage / 100), (math.clamp(this.aim_assist_timer, 0, this.aim_assist_max_timer) / this.aim_assist_max_timer));
             current_angle.add(vec2.multiply(vec2.subtract(desired_angle, current_angle), t));
@@ -488,8 +515,13 @@ class Enemy extends Ship {
     }
 }
 
-function intercept(shooter, bullet_speed, target) {
+function intercept(shooter, bullet_speed, target, max_velocity) {
     let relativeVelocity = vec2.subtract(target.velocity, shooter.velocity);
+    let mag = relativeVelocity.magnitude();
+    if(mag > max_velocity) {
+        relativeVelocity.normalize().multiply(max_velocity);
+    }
+
     let toTarget = vec2.subtract(target.position, shooter.position);
     let a = vec2.dot(relativeVelocity, relativeVelocity) - (bullet_speed * bullet_speed);
     let b = 2 * vec2.dot(relativeVelocity, toTarget);

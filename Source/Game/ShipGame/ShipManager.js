@@ -21,7 +21,7 @@ class ShipManager {
         }
 
         for(let i = this.players.length - 1; i >= 0; --i) {
-            let kill = this.players[i].update(delta_time, this, bullet_manager, this.bounds);
+            let kill = this.players[i].update(delta_time, this, bullet_manager, asteroid_manager, this.bounds);
 
             if(!kill) continue;
             this.killed_players.push(this.players.splice(i, 1)[0]);

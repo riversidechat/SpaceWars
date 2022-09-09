@@ -68,6 +68,14 @@ class line {
     static print(a) {
         return a.print();
     }
+
+    get area() {
+        let x1 = Math.min(this.x1, this.x2)
+        let y1 = Math.min(this.y1, this.y2)
+        let x2 = Math.max(this.x1, this.x2)
+        let y2 = Math.max(this.y1, this.y2)
+        return new rect(x1, y1, x2 - x1, y2 - y1);
+    }
 }
 
 class thick_line {

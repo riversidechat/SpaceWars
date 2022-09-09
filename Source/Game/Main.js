@@ -8,14 +8,14 @@ let mode = "intro"
 let intro_timer = 0;
 let intro_end_time = 1;
 let updates = 1;
-const game_zoom = 4;
+const game_zoom = 5;
 
 function setup() {
     mainCanvas = renderer.createCanvas(new rect(0, 0, renderer.screenWidth(), renderer.screenHeight()));
     renderer.zoom = 1;
     
     ship_manager.add(new Player(vec2.zero, vec2.zero, Math.PI / 2));
-    for(let i = 0; i < 1; ++i) {
+    for(let i = 0; i < 50; ++i) {
         let ship = new Enemy(undefined, vec2.random(bounds.left, bounds.right, bounds.top, bounds.bottom), vec2.zero, Math.PI / 2);
 
         let found = [];
@@ -92,9 +92,11 @@ async function render(delta_time) {
         ship_manager.draw();
         asteroid_manager.draw();
     } else if(mode === "intro") {
+        asteroid_manager.draw();
         drawIntroText(color.white, 1, ship_manager);
     } 
     if(mode === "fade out") {
+        asteroid_manager.draw();
         drawIntroText(color.white, 0, ship_manager);
     }
 }
