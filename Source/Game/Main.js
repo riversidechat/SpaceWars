@@ -172,6 +172,8 @@ function drawIntroText(c, draw_ship = 1, ship_manager) {
         
         renderer.strokeColor = color.create(255, 255, 255, 255);
         drawString('FOR CONTROLS PRESS RIGHT/D', true, vec2.create(0, -100), vec2.create(0, -100), 15, 16.6, 5, 0)
+        drawString('FOR DESCRIPTION PRESS LEFT/A', true, vec2.create(0, -150), vec2.create(0, -150), 15, 16.6, 5, 0)
+        drawString('FOR MESSAGE PRESS DOWN/S', true, vec2.create(0, -200), vec2.create(0, -200), 15, 16.6, 5, 0)
         
         renderer.strokeColor = color.create((Math.sin(timer + (Math.PI/3*2)) + 1) / 2 * 255, (Math.cos(timer + (Math.PI/3*4)) + 1) / 2 * 255, (Math.sin(timer + (Math.PI/3*6)) + 1) / 2 * 255, 1)
         drawString('HAPPY BIRTHDAY JOHN', false, vec2.zero, vec2.create(-renderer.width / 2 + 25, -renderer.height / 2 + 25), 30, 33.3, 5, 0)
@@ -180,15 +182,53 @@ function drawIntroText(c, draw_ship = 1, ship_manager) {
         drawString('ARROW KEYS/WASD FOR MOVMENT', true, vec2.create(renderer.width, renderer.height / 4), vec2.create(renderer.width, renderer.height / 4), 15, 16.6, 5, 5)
         drawString('MOUSE LEFT FOR SHOOTING', true, vec2.create(renderer.width, renderer.height / 4 - 50), vec2.create(renderer.width, renderer.height / 4 + 5), 15, 16.6, 5, 5)
         drawString('HOLD SPACE FOR MOUSE FOLLOW', true, vec2.create(renderer.width, renderer.height / 4 - 100), vec2.create(renderer.width, renderer.height / 4 + 10), 15, 16.6, 5, 5)
-        drawString('HOLD SHIFT FOR SPEED BOOST BUT ALSO DECREASED FIRE RATE', true, vec2.create(renderer.width, renderer.height / 4 - 150), vec2.create(renderer.width, renderer.height / 4 + 10), 15, 16.6, 5, 5)
+        drawString('HOLD SHIFT FOR A SPEED BOOST BUT ALSO A DECREASE OF FIRE RATE', true, vec2.create(renderer.width, renderer.height / 4 - 150), vec2.create(renderer.width, renderer.height / 4 + 10), 15, 16.6, 5, 5)
         drawString('LEFT/A TO RETURN TO MAIN MENU', true, vec2.create(renderer.width, -100), vec2.create(renderer.width, -100), 15, 16.6, 5, 5)
+        
+        renderer.strokeColor = color.create(255, 255, 255, 255);
+        drawString('THIS GAME IS AN ATARI ASTEROIDS LIKE GAME.', true, vec2.create(-renderer.width, renderer.height / 4), vec2.create(-renderer.width, renderer.height / 4), 15, 16.6, 5, 5)
+        drawString('IT STARTED OUT AS A TANK SHOOTER, BUT, EVENTUALLY LEAD TO THIS.', true, vec2.create(-renderer.width, renderer.height / 4 - 50), vec2.create(-renderer.width, renderer.height / 4 - 50), 15, 16.6, 5, 5)
+        drawString('THE ENEMY SHIPS MOVEMENT IS DETERMINED BY A NEURAL NETWORK.', true, vec2.create(-renderer.width, renderer.height / 4 - 100), vec2.create(-renderer.width, renderer.height / 4 - 100), 15, 16.6, 5, 5)
+        drawString("THIS GAME USES NEURAL EVOLUTION, BASICLY SURVIVAL OF THE FITISET,\\nTO IMPROVE THE SHIP'S NEURAL NETWORK. HOWEVER, THIS TAKES A LONG TIME.", true, vec2.create(-renderer.width, renderer.height / 4 - 150), vec2.create(-renderer.width, renderer.height / 4 - 150), 15, 16.6, 5, 50 - 16.6)
+        drawString('RIGHT/D TO RETURN TO MAIN MENU', true, vec2.create(-renderer.width, -100), vec2.create(-renderer.width, -100), 15, 16.6, 5, 5)
+        
+        renderer.strokeColor = color.create(255, 255, 255, 255);
+        drawString('HAPPY BIRTHDAY JOHN.', true, vec2.create(0, -renderer.height + renderer.height / 4), vec2.create(0, -renderer.height + renderer.height / 4), 15, 16.6, 5, 5)
+        drawString('HOPFULY YOU WILL ENJOY THIS PROJECT, AS I HAVE PUT TIME AND LEARNING INTO IT.', true, vec2.create(0, -renderer.height + renderer.height / 4 - 50), vec2.create(0, -renderer.height + renderer.height / 4 - 50), 15, 16.6, 5, 5)
+        drawString('THIS DID NOT TURN OUT AS I HAD ORIGINALLY PLANED, HOWEVER, I LIKE WHERE IT ENDED UP.', true, vec2.create(0, -renderer.height + renderer.height / 4 - 100), vec2.create(0, -renderer.height + renderer.height / 4 - 100), 15, 16.6, 5, 5)
+        drawString('I INTEND ON WORKING ON THIS IN THE FUTURE AS WELL.\\nAND WILL TRY TO IMPROVE TO LEARNING RATE OF THE ENEMIES.', true, vec2.create(0, -renderer.height + renderer.height / 4 - 150), vec2.create(0, -renderer.height + renderer.height / 4 - 150), 15, 16.6, 5, 50-16.6)
+        drawString('I HOPE YOU INJOY YOUR BIRTHDAY. AND BEST OF WISHES ON YOUR DRIVE TEST.', true, vec2.create(0, -renderer.height + renderer.height / 4 - 300), vec2.create(0, -renderer.height + renderer.height / 4 - 300), 15, 16.6, 5, 50-16.6)
+        drawString('CHEERS, RIVER.', true, vec2.create(0, -renderer.height + renderer.height / 4 - 400), vec2.create(0, -renderer.height + renderer.height / 4 - 400), 15, 16.6, 5, 50-16.6)
+        drawString('UP/W TO RETURN TO MAIN MENU', true, vec2.create(0, -renderer.height + renderer.height / 4 - 550), vec2.create(0, -renderer.height + renderer.height / 4 - 550), 15, 16.6, 5, 5)
     }
 }
 
 function drawString(str, center, start_position, position, width, height, padding_x, padding_y) {
+    let widths = [];
+    let current_width = 0;
+    for(let i = 0; i < str.length; ++i) {
+        if(str[i] == '\\') {
+            i++
+            switch(str[i]) {
+                case 'n': {
+                    widths.push(current_width);
+                    current_width = 0;
+                } break;
+            }
+
+            continue;
+        }
+
+        let char_width = (str[i] == "'" || str[i] == "," || str[i] == ".")? 0 : width;
+        let char_padding_x = padding_x;
+        current_width += char_width + char_padding_x;
+    }
+    widths.push(current_width);
+    current_width = 0;
+
+    let width_index = 0;
     if(center) {
-        start_position.x -= ((width * str.length) + (padding_x * str.length - 1)) / 2;
-        position.x -= ((width * str.length) + (padding_x * str.length - 1)) / 2;
+        position.x = start_position.x - widths[width_index] / 2;
         position.y = start_position.y;
     }
     for(let i = 0; i < str.length; i++) {
@@ -200,7 +240,8 @@ function drawString(str, center, start_position, position, width, height, paddin
 
             switch(c) {
                 case 'n': {
-                    position.x = start_position.x;
+                    width_index++;
+                    position.x = start_position.x - widths[width_index] / 2;
                     position.y -= height + padding_y
                 } break;
             }
@@ -423,12 +464,17 @@ function drawChar(char, position, width, height, padding) {
         case '.': {
             renderer.line(vec2.add(position, 0, 0), vec2.add(position, 0, 0));
 
-            position.x += width + padding;
+            position.x += padding;
+        } break;
+        case "'": {
+            renderer.line(vec2.add(position, 0, height * 1.25), vec2.add(position, 0, height / 1.25));
+
+            position.x += padding;
         } break;
         case ',': {
             renderer.line(vec2.add(position, 0, 0), vec2.add(position, -width / 4, -height / 4));
 
-            position.x += width + padding;
+            position.x += padding;
         } break;
         case '_': {
             renderer.line(vec2.add(position, 0, 0), vec2.add(position, width, 0));
