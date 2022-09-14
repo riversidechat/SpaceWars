@@ -197,7 +197,7 @@ function drawIntroText(c, draw_ship = 1, ship_manager) {
         drawString('HOPEFULLY YOU WILL ENJOY THIS PROJECT, AS I HAVE PUT TIME AND LEARNING INTO IT.', true, vec2.create(0, -renderer.height + renderer.height / 4 - 50), vec2.create(0, -renderer.height + renderer.height / 4 - 50), 15, 16.6, 5, 5)
         drawString('THIS DID NOT TURN OUT AS I HAD ORIGINALLY PLANED, HOWEVER, I LIKE WHERE IT ENDED UP.', true, vec2.create(0, -renderer.height + renderer.height / 4 - 100), vec2.create(0, -renderer.height + renderer.height / 4 - 100), 15, 16.6, 5, 5)
         drawString('I INTEND ON WORKING ON THIS IN THE FUTURE AS WELL.\\nAND WILL TRY TO IMPROVE THE LEARNING RATE OF THE ENEMIES.', true, vec2.create(0, -renderer.height + renderer.height / 4 - 150), vec2.create(0, -renderer.height + renderer.height / 4 - 150), 15, 16.6, 5, 50-16.6)
-        drawString('I HOPE YOU ENJOY YOUR BIRTHDAY. AND BEST OF WISHES ON YOUR DRIVE TEST.', true, vec2.create(0, -renderer.height + renderer.height / 4 - 300), vec2.create(0, -renderer.height + renderer.height / 4 - 300), 15, 16.6, 5, 50-16.6)
+        drawString('I HOPE YOU ENJOY YOUR BIRTHDAY. BEST OF WISHES TO YOU.\\nAND CONGRATULATIONS ON YOUR DRIVE TEST.', true, vec2.create(0, -renderer.height + renderer.height / 4 - 300), vec2.create(0, -renderer.height + renderer.height / 4 - 300), 15, 16.6, 5, 50-16.6)
         drawString('CHEERS, RIVER.', true, vec2.create(0, -renderer.height + renderer.height / 4 - 400), vec2.create(0, -renderer.height + renderer.height / 4 - 400), 15, 16.6, 5, 50-16.6)
         drawString('UP/W TO RETURN TO MAIN MENU', true, vec2.create(0, -renderer.height + renderer.height / 4 - 550), vec2.create(0, -renderer.height + renderer.height / 4 - 550), 15, 16.6, 5, 5)
     }
