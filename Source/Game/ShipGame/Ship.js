@@ -148,6 +148,20 @@ class Ship extends ShipStats {
     hit(bullet) {
         this.health -= bullet.damage;
     }
+    toObj() {
+        return {position: this.position,
+            rotation: this.rotation,
+            velocity_damping: this.velocity_damping,
+            rotation_damping: this.rotation_damping,
+            base_bullet_velocity: this.base_bullet_velocity,
+            gun_accuracy: this.gun_accuracy,
+            gun_delay: this.gun_delay,
+            ship_size: this.ship_size,
+        }
+    }
+    toString() {
+        return JSON.stringify(this.toObj());
+    }
 }
 
 class Player extends Ship {
@@ -158,6 +172,9 @@ class Player extends Ship {
         this.aim_assist_timer = 0;
         this.aim_assist_max_timer = 0.5;
         this.old_interception = vec2.zero;
+    }
+    toObj() {
+        return {aim_assist_percentage: this.aim_assist_percentage, ...super.toObj()};
     }
     find_ships_near_me(ship_manager) {
         const size = 15000;
@@ -230,11 +247,11 @@ class Player extends Ship {
         let down = keyboard.getKey(keyboard.keys.down_arrow).down || keyboard.getKey(keyboard.keys.s).down;
         let left = keyboard.getKey(keyboard.keys.left_arrow).down || keyboard.getKey(keyboard.keys.a).down;
         let right = keyboard.getKey(keyboard.keys.right_arrow).down || keyboard.getKey(keyboard.keys.d).down;
-        let boost = 3 - (keyboard.getKey(keyboard.keys.shift_left).down * 1.5);
+        let boost = 3 - (keyboard.getKey(keyboard.keys.shift_left).down * 2);
         this.acceleration = (up - down) / boost * deltaTime;
         this.rotation_acceleration = (left - right) / 150 * deltaTime;
         
-        this.boost_delay = keyboard.getKey(keyboard.keys.shift_left).down / 10;
+        this.boost_delay = (up - down) * keyboard.getKey(keyboard.keys.shift_left).down / 5;
 
         if(mouse.down) {
             if(this.target_ship != undefined)
@@ -330,14 +347,14 @@ class Player extends Ship {
         
         if(this.target_ship != undefined) {
             let interception = intercept(this, this.base_bullet_velocity, this.target_ship, 25);
-            this.old_interception = interception.clone();
+            this.old_interception = vec2.subtract(interception, this.position);
             let desired_angle = vec2.subtract(interception, this.position).normalize();
             let current_angle = vec2.create(Math.cos(bullet_rotation), Math.sin(bullet_rotation));
             let t = math.lerp(0, (this.aim_assist_percentage / 100), (math.clamp(this.aim_assist_timer, 0, this.aim_assist_max_timer) / this.aim_assist_max_timer));
             current_angle.add(vec2.multiply(vec2.subtract(desired_angle, current_angle), t));
             bullet_rotation = Math.atan2(current_angle.y, current_angle.x);
         } else {
-            let desired_angle = vec2.subtract(this.old_interception, this.position).normalize();
+            let desired_angle = this.old_interception.normalize();
             let current_angle = vec2.create(Math.cos(bullet_rotation), Math.sin(bullet_rotation));
             let t = math.lerp(0, (this.aim_assist_percentage / 100), (math.clamp(this.aim_assist_timer, 0, this.aim_assist_max_timer) / this.aim_assist_max_timer));
             current_angle.add(vec2.multiply(vec2.subtract(desired_angle, current_angle), t));
@@ -356,8 +373,8 @@ class Player extends Ship {
                                       math.random(0.8, 1)));
         this.gun_timer = 0;
                                       
-        const recoilPower_pos = 0;//1;
-        const recoilPower_vel = 0//0.5;
+        const recoilPower_pos = 1;
+        const recoilPower_vel = 0.5;
         let recoil = vec2.create(Math.cos(this.rotation), Math.sin(this.rotation));
         this.position.add(vec2.multiply(recoil, -recoilPower_pos))
         this.velocity.add(vec2.multiply(recoil, -recoilPower_vel))
@@ -375,6 +392,9 @@ class Enemy extends Ship {
         if(nn != undefined) this.nn = new NeuralNetwork(nn);
         else this.nn = new NeuralNetwork([7, 14, 28, 14, 4]);
         this.target_position;
+    }
+    toObj() {
+        return {nn: this.nn.toObj(),  ...super.toObj()};
     }
     find_closest_ship(ship_manager) {
         const area_growth = 2;
@@ -491,10 +511,11 @@ class Enemy extends Ship {
         inputs[6] = (this.health - 50) / 50
         let outputs = this.nn.feedForward(inputs);
 
-        this.acceleration = outputs[0] / (3 - ((outputs[1] + 1) / 2) * 1.5) * deltaTime;
-        this.rotation_acceleration = outputs[2] / 150 * deltaTime;
+        let boost = 3 - (Math.round(Math.abs(outputs[1])) * 2);
 
-        this.boost_delay = (Math.round((outputs[1] + 1)) / 2) / 10;
+        this.acceleration = outputs[0] / boost * deltaTime;
+        this.rotation_acceleration = outputs[2] / 150 * deltaTime;
+        this.boost_delay = Math.round(Math.abs(outputs[0])) * Math.round(Math.abs(outputs[1])) / 5;
         
         if(outputs[3] >= 0 && this.can_fire()) {
             this.fire(bullet_manager);

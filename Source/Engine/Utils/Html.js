@@ -6,6 +6,9 @@ class html {
       el.setAttribute(arg, args[arg]);
     }
     parent.appendChild(el);
-    return (args["id"] != undefined) ? "#" + args["id"] : "";
+    return (args["id"] != undefined) ? "#" + args["id"] : el;
+  }
+  static Get(id) {
+    return document.querySelector(id);
   }
 }

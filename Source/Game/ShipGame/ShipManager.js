@@ -2,8 +2,8 @@ class ShipManager {
     constructor(num_players, num_enemies, bounds) {
         this.players = [];
         this.enemies = [];
-        this.killed_enemies = [];
         this.killed_players = [];
+        this.killed_enemies = [];
 
         this.num_players = num_players;
         this.num_enemies = num_enemies;
@@ -12,7 +12,27 @@ class ShipManager {
         this.qtree = new QuadTree(bounds);
 
         this.timer = 0
-        this.max_timer = 240; // In seconds
+        this.max_timer = 480; // In seconds
+    }
+    toObj() {
+        let playersObj = [];
+        for(let player of this.players) {
+            playersObj.push(player.toObj());
+        }
+        for(let player of this.killed_players) {
+            playersObj.push(player.toObj());
+        }
+        let enemeiesObj = [];
+        for(let enemy of this.enemies) {
+            enemeiesObj.push(enemy.toObj());
+        }
+        for(let enemy of this.killed_enemies) {
+            enemeiesObj.push(enemy.toObj());
+        }
+        return {num_players: this.num_players, num_enemies: this.num_enemies, max_timer: this.max_timer, players: playersObj, enemies: enemeiesObj};
+    }
+    toString() {
+        return JSON.stringify(this.toObj());
     }
     update(delta_time, bullet_manager, asteroid_manager) {    
         this.timer += delta_time;

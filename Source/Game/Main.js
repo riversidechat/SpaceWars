@@ -9,6 +9,7 @@ let intro_timer = 0;
 let intro_end_time = 1;
 let updates = 1;
 const game_zoom = 5;
+let intro_pan = vec2.zero;
 
 function setup() {
     mainCanvas = renderer.createCanvas(new rect(0, 0, renderer.screenWidth(), renderer.screenHeight()));
@@ -58,6 +59,13 @@ function setup() {
     }
 } 
 
+async function handle_user_input() {
+    let up = keyboard.getKey(keyboard.keys.up_arrow).pressed || keyboard.getKey(keyboard.keys.w).pressed;
+    let down = keyboard.getKey(keyboard.keys.down_arrow).pressed || keyboard.getKey(keyboard.keys.s).pressed;
+    let left = keyboard.getKey(keyboard.keys.left_arrow).pressed || keyboard.getKey(keyboard.keys.a).pressed;
+    let right = keyboard.getKey(keyboard.keys.right_arrow).pressed || keyboard.getKey(keyboard.keys.d).pressed;
+    intro_pan.add(vec2.create((right - left), (up - down)));
+}
 async function update(delta_time) {
     renderer.activeCanvas = mainCanvas;
     renderer.width = renderer.screenWidth();
@@ -71,8 +79,10 @@ async function update(delta_time) {
 
         if(ship_manager.players.length)
             renderer.camera.move_softly(ship_manager.players[0].position, bounds);
-    } else if(mode === "intro") {
-        if(keyboard.getKey(keyboard.keys.space).down) mode = "fade out"
+        } else if(mode === "intro") {
+            if(keyboard.getKey(keyboard.keys.space).down) mode = "fade out"
+
+        renderer.camera.move_softly(vec2.multiply(intro_pan, renderer.size), bounds);
     } else if(mode === "fade out") {
         intro_timer += delta_time;
 
@@ -82,6 +92,8 @@ async function update(delta_time) {
 
         if(intro_timer >= intro_end_time) mode = "game";
     }
+
+    handle_user_input();
 }
 
 async function render(delta_time) {
@@ -158,8 +170,18 @@ function drawIntroText(c, draw_ship = 1, ship_manager) {
         renderer.strokeWeight = 2.5;
         drawString('PRESS SPACE', true, vec2.zero, vec2.zero, 30, 33.3, 5, 0)
         
+        renderer.strokeColor = color.create(255, 255, 255, 255);
+        drawString('FOR CONTROLS PRESS RIGHT/D', true, vec2.create(0, -100), vec2.create(0, -100), 15, 16.6, 5, 0)
+        
         renderer.strokeColor = color.create((Math.sin(timer + (Math.PI/3*2)) + 1) / 2 * 255, (Math.cos(timer + (Math.PI/3*4)) + 1) / 2 * 255, (Math.sin(timer + (Math.PI/3*6)) + 1) / 2 * 255, 1)
         drawString('HAPPY BIRTHDAY JOHN', false, vec2.zero, vec2.create(-renderer.width / 2 + 25, -renderer.height / 2 + 25), 30, 33.3, 5, 0)
+
+        renderer.strokeColor = color.create(255, 255, 255, 255);
+        drawString('ARROW KEYS/WASD FOR MOVMENT', true, vec2.create(renderer.width, renderer.height / 4), vec2.create(renderer.width, renderer.height / 4), 15, 16.6, 5, 5)
+        drawString('MOUSE LEFT FOR SHOOTING', true, vec2.create(renderer.width, renderer.height / 4 - 50), vec2.create(renderer.width, renderer.height / 4 + 5), 15, 16.6, 5, 5)
+        drawString('HOLD SPACE FOR MOUSE FOLLOW', true, vec2.create(renderer.width, renderer.height / 4 - 100), vec2.create(renderer.width, renderer.height / 4 + 10), 15, 16.6, 5, 5)
+        drawString('HOLD SHIFT FOR SPEED BOOST BUT ALSO DECREASED FIRE RATE', true, vec2.create(renderer.width, renderer.height / 4 - 150), vec2.create(renderer.width, renderer.height / 4 + 10), 15, 16.6, 5, 5)
+        drawString('LEFT/A TO RETURN TO MAIN MENU', true, vec2.create(renderer.width, -100), vec2.create(renderer.width, -100), 15, 16.6, 5, 5)
     }
 }
 
@@ -415,6 +437,11 @@ function drawChar(char, position, width, height, padding) {
         } break;
         case '-': {
             renderer.line(vec2.add(position, width * 0.25, height / 2), vec2.add(position, width / 1.5, height / 2));
+
+            position.x += width + padding;
+        } break;
+        case '/': {
+            renderer.line(vec2.add(position, 0, 0), vec2.add(position, width, height));
 
             position.x += width + padding;
         } break;

@@ -209,85 +209,88 @@ class NeuralNetwork {
         let obj = document.querySelector(link);
         obj.click();
     }
-    toString(decimals = 0) {
-        let string = "";
-        let region = "";
-        let newRegion = (name) => { string += ":" + name + ":"; region = name; };
-        let pushValue = (value) => { string += value + "|"}
-        
-        newRegion("topology");
-        for(let size of this.topology) {
-            pushValue(size);
-        }
+    // toString() {
+    //     let string = "";
 
-        newRegion("activation");
-        pushValue(this.activation.string);
+    //     let enter_region = (name) => { push_value(name); string += ':'; }
+    //     let exit_region = (name) => { string += '}'; }
+    //     let push_value = (value) => {
+    //         let type = typeof value;
+    //         let seperator;
 
-        newRegion("weights");
-        for(let weight of this.weights) {
-            newRegion("matrix");
-            for(let arr of weight.data) {
-                newRegion("array");
-                for(let value of arr) {
-                    if(decimals <= 0)
-                        pushValue(value);
-                    else
-                        pushValue(math.round(value, 10 ** decimals));
-                }
-            }
-        }
+    //         switch(type) {
+    //             case "number": {
+    //                 string += (string[string.length - 1] != seperator? seperator : '') + value + seperator;
+    //             } break;
+    //         }
 
-        newRegion("biases");
-        for(let bias of this.biases) {
-            newRegion("matrix");
-            for(let value of bias.data) {
-                if(decimals <= 0)
-                    pushValue(value);
-                else
-                    pushValue(math.round(value, 10 ** decimals));
-                
-            }
-        }
-        
-        return string;
+    //     }
+    //     let push_values = (values) => { for(let value of values) { push_value(value); } }
+
+    //     enter_region("topology");
+    //         push_values(this.topology);
+    //     exit_region();
+
+    //     enter_region("activation");
+    //         push_value(this.activation.string);
+    //     exit_region();
+
+    //     enter_region("weights");
+    //     for(let weight of this.weights) {
+    //         enter_region("matrix");
+    //         for(let arr of weight.data) {
+    //             enter_region("array");
+    //                 push_values(arr);
+    //             exit_region();
+    //         }
+    //         exit_region();
+    //     }
+    //     exit_region();
+
+    //     return string;
+    // }
+    toString() {
+        return JSON.stringify(this.toObj());
     }
-    fromString(string) {
-        let index = 0;
-        let getRegion = () => {
-            let region = "";
-            index++;
-            while(string[index] != ':') {
-                region += string[index];
-                index++;
-            }
-            return region;
-        }
-        let getValue = () => {
-            let value = "";
-            index++;
-            while(string[index] != '|') {
-                value += string[index];
-                index++;
-            }
-            return parseFloat(value);
-        }
-        let getValues = () => {
-            let values = [];
-            while(string[index + 1] != ':') {
-                values.push(getValue());
-            }
-            index++;
-            return values;
+    static fromString(string) {
+        let parsed = JSON.parse(string);
+
+        let nn = new NeuralNetwork();
+        nn.topology = parsed.topology;
+        nn.activation = (parsed.activation == "sigmoid"? sigmoid : tanh);
+        nn.derivitive = (parsed.activation == "sigmoid"? sigmoid_prime : tanh_prime);
+
+        nn.weights = new Array(parsed.weights.length);
+        for(let i = 0; i < parsed.weights.length; ++i) {
+            nn.weights[i] = new matrix(parsed.weights[i].data);
         }
 
-        let region = getRegion();
-        let value = getValues();
-        let region2 = getRegion();
-        return [value, region, region2]
-        // switch(region) {
-        //     case "topology": {
+        nn.biases = new Array(parsed.biases.length);
+        for(let i = 0; i < parsed.biases.length; ++i) {
+            nn.biases[i] = new matrix(parsed.biases[i].data);
+        }
 
-        //     } break;
-        // }
+        return nn;
+    }
+    toObj() {
+        return {topology: this.topology, activation: this.activation.string, weights: this.weights, biases: this.biases};
+    }
+    fromObj(obj) {
+        let nn = new NeuralNetwork();
+        nn.topology = obj.topology;
+        nn.activation = (obj.activation == "sigmoid"? sigmoid : tanh);
+        nn.derivitive = (obj.activation == "sigmoid"? sigmoid_prime : tanh_prime);
+
+        nn.weights = new Array(obj.weights.length);
+        for(let i = 0; i < obj.weights.length; ++i) {
+            nn.weights[i] = new matrix(obj.weights[i].data);
+        }
+
+        nn.biases = new Array(obj.biases.length);
+        for(let i = 0; i < obj.biases.length; ++i) {
+            nn.biases[i] = new matrix(obj.biases[i].data);
+        }
+
+        return nn;
     }
 }
